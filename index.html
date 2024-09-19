@@ -1,31 +1,133 @@
-<!doctype html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <link rel="stylesheet" href="./css/style.css">
-          </head>
-          <body><body><header id="izap" class="header-banner"><div class="container-width" id="iczs"><div class="logo-container">
-      </div><nav class="menu"><div id="i6or" class="logo">Kariera
-        </div></nav><div class="clearfix">
-      </div><div id="iixmi" class="lead-title">Tvoja brána k nový pracovným príležitostiam
-      </div><div id="ibnxw" class="sub-lead-title">Tu nájdeš rôzne pracovné ponuky , pre firmy ktoré chcú pridať pracovnú ponuku všetky informácie nájdete na konci stránky
-      </div></div></header><section class="am-sect"><div id="ikiru"><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Zoznam Pracovných Ponúk
-      </title><h1 id="infoo">Zoznam Pracovných Ponúk
-      </h1><div id="izqzi" class="job-listing"><div id="ifh2y" class="job-info"><div id="i46n4" class="job-title">EinHeit Group a.s
-          </div><div id="i16cv" class="job-description"><span id="ial3l">Ahoj,jsme prosperující firma co hledá právě tebe.
-Nabízíme spoustu soutěží,nadprůměrný plat a spoustu
-dalších benefitů.
-neváhej a ozvi se.<span id="id6f2"></span>praca<br/></span>.
-          </div></div><div id="i0czh" class="job-details"><div id="itsko" class="contact-number">Tel: 745337
-            <br/>e-mai:neni
-          </div></div></div><!-- Pridajte ďalšie job-listing divy pre ďalšie pracovné ponuky --></div><div class="container-width">
-    </div></section><footer id="ihs63q" class="footer-under"><div id="id7rp" class="gjs-row"><div class="gjs-cell">
-      </div><div class="gjs-cell"><div id="igkq8">Pokial máte záujem pridať pracovnú ponuku napíšte na e-mail ema.jasalova@post.ic , všetko potrebné ako vaše číslo a meno, nazov firmy a popis tam napíšte
-        </div></div><div id="ixtn6" class="gjs-cell"><div id="ibi3u"> Cena pridania inzerátu je  10 tisíc na týždeň , ktoré je potrebné pred odoslaním e-mailu poslať na osobný bankový účet :  Ema Jasalova
-        </div><div id="iai7n">
-        </div></div></div><div class="container-width">
-    </div><div id="inkao7" class="copyright"><div class="container-width"><div id="itqnun" class="made-with">Jasalová
-        </div><div class="foot-social-btns">facebook twitter linkedin mail
-        </div><div class="clearfix">
-        </div></div></div></footer></body></body>
-        </html>
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moje Rádio s MockAPI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .radio-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 10px;
+            width: 80%;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        audio {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="radio-container">
+        <h1>Moje Rádio s MockAPI</h1>
+        <input type="text" id="mp3Url" placeholder="Vložte odkaz na MP3 skladbu">
+        <button id="addSongBtn">Pridať skladbu</button>
+        
+        <ul id="songList"></ul>
+
+        <audio id="audioPlayer" controls></audio>
+    </div>
+
+    <script>
+        const apiUrl = 'https://6676bc44145714a1bd729ff1.mockapi.io/api/v1/tp'; // API URL
+        const addSongBtn = document.getElementById('addSongBtn');
+        const songList = document.getElementById('songList');
+        const audioPlayer = document.getElementById('audioPlayer');
+        let songs = [];
+
+        // Funkcia na načítanie skladieb z API
+        async function fetchSongs() {
+            const response = await fetch(apiUrl);
+            songs = await response.json();
+            return songs;
+        }
+
+        // Funkcia na pridanie skladby do API
+        async function addSongToAPI(mp3Url) {
+            await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: mp3Url })
+            });
+        }
+
+        // Funkcia na prehrávanie náhodnej skladby
+        function playRandomSong() {
+            if (songs.length > 0) {
+                const randomIndex = Math.floor(Math.random() * songs.length);
+                const randomSong = songs[randomIndex];
+                audioPlayer.src = randomSong.url;
+                audioPlayer.play();
+            }
+        }
+
+        // Funkcia na prehranie ďalšej náhodnej skladby po skončení predchádzajúcej
+        audioPlayer.addEventListener('ended', playRandomSong);
+
+        // Funkcia na pridanie skladby do zoznamu a API
+        addSongBtn.addEventListener('click', async function() {
+            const mp3Url = document.getElementById('mp3Url').value;
+            if (mp3Url) {
+                await addSongToAPI(mp3Url);
+                displaySongs(); // Načítanie skladieb do zoznamu
+                document.getElementById('mp3Url').value = ''; // Vyčistenie poľa
+            }
+        });
+
+        // Funkcia na zobrazenie skladieb v zozname
+        async function displaySongs() {
+            await fetchSongs();
+            songList.innerHTML = ''; // Vyčistenie zoznamu
+            songs.forEach(song => {
+                const listItem = document.createElement('li');
+                listItem.textContent = song.url;
+                
+                // Kliknutie na položku zoznamu prehrá skladbu
+                listItem.addEventListener('click', function() {
+                    audioPlayer.src = song.url;
+                    audioPlayer.play();
+                });
+
+                songList.appendChild(listItem);
+            });
+
+            // Automatické spustenie náhodnej skladby pri načítaní stránky
+            playRandomSong();
+        }
+
+        // Načítanie skladieb pri načítaní stránky
+        displaySongs();
+    </script>
+</body>
+</html>
