@@ -160,18 +160,44 @@
     </div>
 
     <script>
-        const products = [];
+        const apiUrl = 'https://6676bc44145714a1bd729ff1.mockapi.io/api/v1/tlep';
+        let products = [];
 
-        function addProduct() {
+        // Načítať produkty z MockAPI
+        async function loadProducts() {
+            try {
+                const response = await fetch(apiUrl);
+                products = await response.json();
+                renderProducts();
+            } catch (error) {
+                console.error('Chyba pri načítaní produktov:', error);
+            }
+        }
+
+        // Pridať produkt na MockAPI
+        async function addProduct() {
             const name = document.getElementById('product-name').value;
             const price = document.getElementById('product-price').value;
             const stock = document.getElementById('product-stock').value;
             const image = document.getElementById('product-image').value;
 
             if (name && price && stock && image) {
-                products.push({ name, price, stock, image });
-                renderProducts();
-                clearForm();
+                const newProduct = { name, price, stock, image };
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newProduct)
+                    });
+                    const addedProduct = await response.json();
+                    products.push(addedProduct);
+                    renderProducts();
+                    clearForm();
+                } catch (error) {
+                    console.error('Chyba pri pridávaní produktu:', error);
+                }
             } else {
                 alert("Vyplňte všetky polia.");
             }
@@ -233,7 +259,9 @@
                 alert("Nesprávne heslo.");
             }
         }
+
+        // Načítať produkty po načítaní stránky
+        window.onload = loadProducts;
     </script>
 </body>
 </html>
-
