@@ -1,267 +1,95 @@
 <!DOCTYPE html>
-<html lang="sk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zoznam produktov</title>
+    <title>Katastr</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .product {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
-        }
-
-        .product img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        .product h3 {
-            margin: 10px 0;
-            font-size: 1.2rem;
-        }
-
-        .product p {
-            margin: 5px 0;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 15px;
-            background-color: #007BFF;
+            background-color: #2c3e50;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            padding: 20px;
+        }
+        .map-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 20px;
+            border: 3px solid #ecf0f1;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+        #map {
+            width: 800px;
+            height: 600px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .zone {
+            position: absolute;
+            border: 2px solid red;
+            background: rgba(255, 0, 0, 0.5);
             text-align: center;
-            margin-top: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
-        .btn:hover {
-            background-color: #0056b3;
-        }
-
-        /* Popup */
-        #popup-form {
-            display: none;
-            position: fixed;
-            top: 50%;
+        .zone:hover::after {
+            content: attr(data-name);
+            position: absolute;
+            background: black;
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            top: -25px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-
-        #popup-form.active {
-            display: block;
-        }
-
-        #popup-form input, #popup-form button {
-            margin-bottom: 10px;
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-
-        #overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 500;
-        }
-
-        #overlay.active {
-            display: block;
-        }
-
-        /* Formulár na pridávanie produktov */
-        #add-product-form {
-            margin-top: 40px;
-        }
-
-        #add-product-form input, #add-product-form button {
-            margin-bottom: 10px;
-            padding: 10px;
-            width: 100%;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            transform: translateX(-50%);
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h1>Zoznam produktov</h1>
-
-        <!-- Grid produktov -->
-        <div class="product-grid" id="product-grid">
-            <!-- Produkty sa načítajú tu cez JavaScript -->
+        <h1>San Andreas Map - View Zones</h1>
+        <div class="map-container">
+            <div id="map"></div>
         </div>
-
-        <!-- Formulár na pridanie nového produktu -->
-        <div id="add-product-section">
-            <h2>Pridaj nový produkt</h2>
-            <input type="password" id="password-input" placeholder="Zadaj heslo" />
-            <button class="btn" onclick="checkPassword()">Odomknúť pridanie produktu</button>
-        </div>
-
-        <!-- Formulár na pridávanie produktu (skrytý, kým sa nezadá správne heslo) -->
-        <div id="add-product-form" style="display:none;">
-            <input type="text" id="product-name" placeholder="Názov produktu" />
-            <input type="number" id="product-price" placeholder="Cena produktu" />
-            <input type="number" id="product-stock" placeholder="Počet kusov na sklade" />
-            <input type="text" id="product-image" placeholder="Odkaz na obrázok produktu" />
-            <button class="btn" onclick="addProduct()">Pridať produkt</button>
-        </div>
-
-        <!-- Popup formulár na objednanie -->
-        <div id="popup-form">
-            <h3>Objednávka</h3>
-            <p id="popup-product-name"></p>
-            <input type="text" id="customer-name" placeholder="Tvoje meno" />
-            <input type="text" id="customer-phone" placeholder="Tvoje telefónne číslo" />
-            <input type="number" id="order-quantity" placeholder="Počet kusov" />
-            <button class="btn" onclick="submitOrder()">Odoslať objednávku</button>
-            <button class="btn" onclick="closePopup()">Zavrieť</button>
-        </div>
-
-        <!-- Overlay -->
-        <div id="overlay"></div>
     </div>
-
+    
     <script>
-        const apiUrl = 'https://6676bc44145714a1bd729ff1.mockapi.io/api/v1/tlep';
-        let products = [];
+        const apiUrl = "https://674600bf512ddbd807fa7e9e.mockapi.io/etsst/zones";
+        const map = document.getElementById("map");
+        map.style.backgroundImage = "url('your-map-image.jpg')";
 
-        // Načítať produkty z MockAPI
-        async function loadProducts() {
-            try {
-                const response = await fetch(apiUrl);
-                products = await response.json();
-                renderProducts();
-            } catch (error) {
-                console.error('Chyba pri načítaní produktov:', error);
-            }
-        }
-
-        // Pridať produkt na MockAPI
-        async function addProduct() {
-            const name = document.getElementById('product-name').value;
-            const price = document.getElementById('product-price').value;
-            const stock = document.getElementById('product-stock').value;
-            const image = document.getElementById('product-image').value;
-
-            if (name && price && stock && image) {
-                const newProduct = { name, price, stock, image };
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(newProduct)
+        function loadZones() {
+            axios.get(apiUrl)
+                .then(response => {
+                    response.data.forEach(zone => {
+                        const zoneDiv = document.createElement("div");
+                        zoneDiv.className = "zone";
+                        zoneDiv.style.width = `${zone.width}px`;
+                        zoneDiv.style.height = `${zone.height}px`;
+                        zoneDiv.style.left = `${zone.x}px`;
+                        zoneDiv.style.top = `${zone.y}px`;
+                        zoneDiv.dataset.name = zone.name;
+                        zoneDiv.style.position = "absolute";
+                        map.appendChild(zoneDiv);
                     });
-                    const addedProduct = await response.json();
-                    products.push(addedProduct);
-                    renderProducts();
-                    clearForm();
-                } catch (error) {
-                    console.error('Chyba pri pridávaní produktu:', error);
-                }
-            } else {
-                alert("Vyplňte všetky polia.");
-            }
+                })
+                .catch(error => console.error("Error loading zones:", error));
         }
 
-        function clearForm() {
-            document.getElementById('product-name').value = '';
-            document.getElementById('product-price').value = '';
-            document.getElementById('product-stock').value = '';
-            document.getElementById('product-image').value = '';
-        }
-
-        function renderProducts() {
-            const grid = document.getElementById('product-grid');
-            grid.innerHTML = '';
-            products.forEach((product, index) => {
-                const productElement = `
-                    <div class="product">
-                        <img src="${product.image}" alt="${product.name}" />
-                        <h3>${product.name}</h3>
-                        <p>Cena: ${product.price} kč</p>
-                        <p>Na sklade: ${product.stock} ks</p>
-                        <button class="btn" onclick="openPopup(${index})">Objednať</button>
-                    </div>
-                `;
-                grid.innerHTML += productElement;
-            });
-        }
-
-        function openPopup(index) {
-            const product = products[index];
-            document.getElementById('popup-product-name').innerText = `Produkt: ${product.name}`;
-            document.getElementById('overlay').classList.add('active');
-            document.getElementById('popup-form').classList.add('active');
-        }
-
-        function closePopup() {
-            document.getElementById('overlay').classList.remove('active');
-            document.getElementById('popup-form').classList.remove('active');
-        }
-
-        function submitOrder() {
-            const name = document.getElementById('customer-name').value;
-            const phone = document.getElementById('customer-phone').value;
-            const quantity = document.getElementById('order-quantity').value;
-            if (name && phone && quantity) {
-                alert(`Objednávka odoslaná: ${name}, ${phone}, ${quantity} ks`);
-                closePopup();
-            } else {
-                alert("Vyplňte všetky polia.");
-            }
-        }
-
-        function checkPassword() {
-            const password = document.getElementById('password-input').value;
-            if (password === 'lelko') {
-                document.getElementById('add-product-form').style.display = 'block';
-            } else {
-                alert("Nesprávne heslo.");
-            }
-        }
-
-        // Načítať produkty po načítaní stránky
-        window.onload = loadProducts;
+        window.onload = loadZones;
     </script>
 </body>
 </html>
