@@ -27,7 +27,7 @@
         }
         #map {
             width: 800px;
-            height: 600px;
+            height: 800px;
             background-size: cover;
             background-position: center;
             position: relative;
@@ -67,9 +67,9 @@
     </div>
     
     <script>
-        const apiUrl = "https://674600bf512ddbd807fa7e9e.mockapi.io/etsst/zones";
+        const apiUrl = "https://674600bf512ddbd807fa7e9e.mockapi.io/etsst";
         const map = document.getElementById("map");
-        map.style.backgroundImage = "url('your-map-image.jpg')";
+        map.style.backgroundImage = "url('https://i.imgur.com/97mIjBh.jpg')";
 
         function loadZones() {
             axios.get(apiUrl)
